@@ -24,7 +24,7 @@ class FSASpotter(
     FSASpotter.generateCandidates(sentence, fsaDictionary, initialSpans = initialSpans)
   }
 
-  def typeOrder = Array("Capital_Sequences", "m")
+  def typeOrder = Array("m", "Capital_Sequences")
 
   private var name = "FSA dictionary spotter"
   def getName = name
@@ -84,14 +84,16 @@ object FSASpotter {
 
         do {
           //Get the transition for the next token:
-          val (endState, nextState) = fsaDictionary.next(currentState, ids(j))
+          // Chris: commenting stuff for hacked testing
+          //val (endState, nextState) = fsaDictionary.next(currentState, ids(j))
 
           //Add a span if this is a possible spot:
-          if (endState == FSASpotter.ACCEPTING_STATE)
-            spans :+= new Span(i, j+1, "m")
+          //if (endState == FSASpotter.ACCEPTING_STATE)
+          spans :+= new Span(i, j+1, "m")
 
           //Keep traversing the FSA until a rejecting state or the end of the sentence:
-          currentState = nextState
+          //currentState = nextState
+
           j += 1
         } while ( currentState != FSASpotter.REJECTING_STATE && j < sentence.length )
       }
