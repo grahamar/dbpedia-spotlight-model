@@ -25,23 +25,30 @@ class DBCandidateSearcher(val resStore: ResourceStore, val sfStore: SurfaceFormS
    * @return
    */
   def getCandidates(sf: SurfaceForm): Set[Candidate] = {
-
+     
+    //println("Getting candidates for: " + sf + " id: " + sf.id)
     var cands = Set[Candidate]()
 
-    if(sf.id > 0)
+    if(sf.id > 0) {
       cands ++= candidateMap.getCandidates(sf)
-    else
+    } else {
       try {
         cands ++= candidateMap.getCandidates(sfStore.getSurfaceForm(sf.name))
+        //println("sf found")
       } catch {
         case e: SurfaceFormNotFoundException =>
       }
+    }
 
-    if (cands.size == 0)
+    if (cands.size == 0) { 
+      //println("SF NOT FOUND")
+      //println("Normalized sfs: " + sfStore.getRankedSurfaceFormCandidates(sf.name).take(ADD_TOP_NORMALIZED_SFS))
       sfStore.getRankedSurfaceFormCandidates(sf.name).take(ADD_TOP_NORMALIZED_SFS).foreach(p =>
         cands ++= candidateMap.getCandidates(p._1)
       )
+    }
 
+    //println("Returning: " + cands)
     cands
   }
 

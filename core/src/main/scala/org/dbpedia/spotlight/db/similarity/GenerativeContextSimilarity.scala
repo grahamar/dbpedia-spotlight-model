@@ -23,7 +23,7 @@ class GenerativeContextSimilarity(tokenTypeStore: TokenTypeStore, contextStore: 
    *
    * TODO: may need to be re-estimated for new languages
    */
-  val lambda = 0.2
+  val lambda = 0.0
 
 
   /**
@@ -54,8 +54,10 @@ class GenerativeContextSimilarity(tokenTypeStore: TokenTypeStore, contextStore: 
     else
       cResAndToken.toDouble / contextStore.getTotalTokenCount(res)
 
-    val ml = MathUtil.lnproduct(MathUtil.ln(lambda), MathUtil.ln(pML))
-    val lm = MathUtil.lnproduct(MathUtil.ln(1-lambda), pLM(token))
+    //val ml = MathUtil.lnproduct(MathUtil.ln(lambda), MathUtil.ln(pML))
+    //val lm = MathUtil.lnproduct(MathUtil.ln(1-lambda), pLM(token))
+    val ml = MathUtil.ln(pML)
+    val lm = pLM(token)
 
     MathUtil.lnsum( lm, if(ml.isNaN) MathUtil.LOGZERO else ml )
   }
@@ -85,22 +87,32 @@ class GenerativeContextSimilarity(tokenTypeStore: TokenTypeStore, contextStore: 
     candidates.map( res => {
       contextScores.put(
         res,
+        // Chris: note we are calling intersect 2x here, super inefficient!
+        //MathUtil.lnproduct(
+        //  intersect(query, res).map({ case(token: TokenType, cResAndToken: Int) =>p(token, res, cResAndToken) })
+        //    .filter(s => !MathUtil.isLogZero(s))
+        //) / intersect(query, res).filter(t => t._2 > 0).length.toDouble
+        // Chris: note that just averaging logprobs would completely void any comparison with eNIL
         MathUtil.lnproduct(
           intersect(query, res).map({ case(token: TokenType, cResAndToken: Int) =>p(token, res, cResAndToken) })
-            .filter(s => !MathUtil.isLogZero(s))
-        )
+            .filter(s => !MathUtil.isLogZero(s)).sorted.reverse.take(10) 
+        ) / intersect(query, res).filter(t => t._2 > 0).take(10).length.toDouble
       )
     })
     contextScores
   }
 
-
   def nilScore(query: Seq[TokenType]): Double = {
     MathUtil.lnproduct(
+      
       query.map{ t: TokenType =>
-        MathUtil.lnproduct(MathUtil.ln(1-lambda), pLM(t))
-      }
+        pLM(t)
+      }.sorted.reverse.take(10)
     )
   }
+
+  //def nilContextScore(query: Seq[TokenType]): Double = {
+  //  nilScore(query) / query.length.toDouble
+  //}
 
 }

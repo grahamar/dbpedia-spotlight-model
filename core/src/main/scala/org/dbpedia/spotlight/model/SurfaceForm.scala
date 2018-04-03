@@ -30,7 +30,20 @@ class SurfaceForm(var name : String) extends Serializable
     this(name)
     this.id = id
     this.annotatedCount = annotatedCount
-    this.totalCount = totalCount
+    // if there is an error in the counts, just make totalCount = annotatedCount if this is an uppercase surfaceform, otherwise make annotatedCount / totalCount = 0.1
+    if(annotatedCount > totalCount && (name.headOption match {
+        case Some(c: Char) => c.isUpper
+        case _ => false
+    })) {
+      this.totalCount = annotatedCount
+    } else {
+      if (totalCount < 1) {
+          this.totalCount = annotatedCount * 10
+      } else {
+          this.totalCount = totalCount
+      }
+    }
+    //println("New sf - name is: " + name + " annotatedCount: " + annotatedCount + " totalCount: " + totalCount)
   }
 
   name = name.replace("’", "'")

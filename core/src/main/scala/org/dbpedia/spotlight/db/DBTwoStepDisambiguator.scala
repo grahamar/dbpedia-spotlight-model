@@ -112,14 +112,17 @@ class DBTwoStepDisambiguator(
 
           val cands = candidateSearcher.getCandidates(sfOcc.surfaceForm)
           SpotlightLog.debug(this.getClass, "# candidates for: %s = %s.", sfOcc.surfaceForm, cands.size)
+          //println("# candidates for: %s = %s.", sfOcc.surfaceForm, cands.size)
 
           if (cands.size > MAX_CANDIDATES) {
             SpotlightLog.debug(this.getClass, "Reducing number of candidates to %d.", MAX_CANDIDATES)
+            //println("Reducing number of candidates to %d.", MAX_CANDIDATES)
             cands.toList.sortBy( -_.prior ).take(MAX_CANDIDATES).toSet
           } else {
             cands
           }
         }
+        //println("Took candidates: " + candidateRes)
 
         allCandidateResources ++= candidateRes.map(_.resource)
         acc + (sfOcc -> candidateRes.toList)
@@ -141,16 +144,19 @@ class DBTwoStepDisambiguator(
         -1
       )
 
+      //val nilContextScore = contextSimilarity.nilScore(tokensDistinct) / tokensDistinct.length
+      val nilContextScore = contextSimilarity.nilScore(tokensDistinct) / tokensDistinct.take(10).length
+
       aSfOcc.featureValue[Array[TokenType]]("token_types") match {
         case Some(t) => eNIL.setFeature(new Score("P(s|e)", contextSimilarity.nilScore(t)))
         case _ =>
       }
 
-      val nilContextScore = contextSimilarity.nilScore(tokensDistinct)
 
       eNIL.setFeature(new Score("P(c|e)", nilContextScore))
       eNIL.setFeature(new Score("P(e)",   MathUtil.ln( 1 / surfaceFormStore.getTotalAnnotatedCount.toDouble ) )) //surfaceFormStore.getTotalAnnotatedCount = total number of entity mentions
       val nilEntityScore = mixture.getScore(eNIL)
+      //println("eNil: " + eNIL)
 
       //Get all other entities:
       val candOccs = occs.getOrElse(aSfOcc, List[Candidate]())
@@ -167,17 +173,20 @@ class DBTwoStepDisambiguator(
           contextScores(cand.resource)
         )
 
-        //Set the scores as features for the resource occurrence:
-
-        //Note that this is not mathematically correct, since the candidate prior is P(e|s),
-        //the correct P(s|e) should be MathUtil.ln( cand.support / cand.resource.support.toDouble )
+        // Set the scores as features for the resource occurrence:
+        // Note that this is not mathematically correct, since the candidate prior is P(e|s),
+        // the correct P(s|e) should be MathUtil.ln( cand.support / cand.resource.support.toDouble )
         resOcc.setFeature(new Score("P(s|e)", MathUtil.ln( cand.prior )))
         resOcc.setFeature(new Score("P(c|e)", resOcc.contextualScore))
         resOcc.setFeature(new Score("P(e)",   MathUtil.ln( cand.resource.prior )))
 
-        //Use the mixture to combine the scores
-        resOcc.setSimilarityScore(mixture.getScore(resOcc))
+        resOcc.setEntityScore(MathUtil.ln(cand.resource.prior))
+        resOcc.setSFScore(MathUtil.ln(cand.prior))
 
+        // Use the mixture to combine the scores
+        // Chris: below we will pass feature columns through softmax 
+        resOcc.setSimilarityScore(mixture.getScore(resOcc))
+        //println("Before softmax: Candidate: " + resOcc)
 
         resOcc
       }
@@ -195,14 +204,54 @@ class DBTwoStepDisambiguator(
 
       //Compute the final score as a softmax function, get the total score first:
       val similaritySoftMaxTotal = linalg.softmax(candOccs.map(_.similarityScore) :+ nilEntityScore)
-      val contextSoftMaxTotal    = linalg.softmax(candOccs.map(_.contextualScore) :+ nilContextScore )
+
+      val cScores = candOccs.map(_.contextualScore) :+ -1.0
+      val contextMin = cScores.min
+      val contextMax = cScores.max
+      val contextDenom = contextMax - contextMin
+      val normContextScores = cScores.map(v => (v - contextMin) / contextDenom)
+      val contextSoftMaxTotal    = linalg.softmax(normContextScores)
+      //val contextSoftMaxTotal    = linalg.softmax(candOccs.map(_.contextualScore) :+ nilContextScore)
+
+      // Chris: note omission of nilSFScore here, because it's computed as Option[] above
+      val sfScores = candOccs.map(_.SFScore) :+ -1.0
+      val sfMin = sfScores.min
+      val sfMax = sfScores.max
+      val sfDenom = sfMax - sfMin
+      val normSfScores = sfScores.map(v => (v - sfMin) / sfDenom)
+      val sfSoftMaxTotal     = linalg.softmax(normSfScores)
+      //val sfSoftMaxTotal     = linalg.softmax(candOccs.map(_.SFScore) :+ -1.0)
+
+
+      val entityScores = candOccs.map(_.entityScore) :+ -1.0
+      val entityMin = entityScores.min
+      val entityMax = entityScores.max
+      val entityDenom = entityMax - entityMin
+      val normEntityScores = entityScores.map(v => (v - entityMin) / entityDenom)
+      val entitySoftMaxTotal     = linalg.softmax(normEntityScores)
+      //val entitySoftMaxTotal     = linalg.softmax(candOccs.map(_.entityScore) :+ -1.0)
+      //val entitySoftMaxTotal     = linalg.softmax(candOccs.map(_.entityScore) :+ nilEntityScore)
 
       candOccs.foreach{ o: DBpediaResourceOccurrence =>
-        o.setSimilarityScore( MathUtil.exp(o.similarityScore - similaritySoftMaxTotal) ) // e^xi / \sum e^xi
-        o.setContextualScore( MathUtil.exp(o.contextualScore - contextSoftMaxTotal) )    // e^xi / \sum e^xi
+        // o.setSimilarityScore( MathUtil.exp(o.similarityScore - similaritySoftMaxTotal) ) // e^xi / \sum e^xi
+
+        // Chris: now recompute scores with softmax over each column
+        o.setContextualScore( MathUtil.exp(((o.contextualScore - contextMin) / contextDenom)  - contextSoftMaxTotal) * 2.0)    // e^xi / \sum e^xi
+        o.setFeature(new Score("P(c|e)", o.contextualScore))
+
+        o.setFeature(new Score("P(s|e)", MathUtil.exp(((o.SFScore - sfMin) / sfDenom) - sfSoftMaxTotal) * 1.0))
+        o.setFeature(new Score("P(e)", MathUtil.exp(((o.entityScore - entityMin) / entityDenom) - entitySoftMaxTotal) * 0.5))
+
+        // Use the mixture to recompute the scores
+        o.setSimilarityScore(mixture.getScore(o))
+        //println("After softmax: Candidate: " + o)
+  
       }
 
-      acc + (aSfOcc -> candOccs)
+      val finalOccs = candOccs.sortBy( o => o.similarityScore ).reverse
+
+      acc + (aSfOcc -> finalOccs)
+      //acc + (aSfOcc -> candOccs)
     })
 
 

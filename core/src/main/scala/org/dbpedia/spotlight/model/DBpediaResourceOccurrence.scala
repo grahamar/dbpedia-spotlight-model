@@ -25,13 +25,14 @@ class DBpediaResourceOccurrence(val id : String,
                                 val provenance : Provenance.Value = Provenance.Undefined,
                                 var similarityScore : Double = -1,
                                 var percentageOfSecondRank : Double = -1,
-                                var contextualScore: Double = -1)
+                                var contextualScore: Double = -1,
+                                var SFScore : Double = -1,
+                                var entityScore : Double = -1)
         extends HasFeatures with Comparable[DBpediaResourceOccurrence] {
 
     setFeature(new Score("finalScore", similarityScore))
     setFeature(new Score("contextualScore", contextualScore))
     setFeature(new Score("percentageOfSecondRank", percentageOfSecondRank))
-
     //TODO there are a lot of constructors here, because Scala keyword arguments do not mix well with Java; cleaning up anyone?
 
     def this(resource : DBpediaResource, surfaceForm : SurfaceForm, context : Text,  textOffset : Int, provenance : Provenance.Value, similarityScore : Double) = {
@@ -78,7 +79,7 @@ class DBpediaResourceOccurrence(val id : String,
         val text = if (start>end) "Text[]" else "Text[... " + context.text.substring(start, end) + " ...]"    
         val score = if (similarityScore == -1.0) "" else "%.3f".format(similarityScore)
         //surfaceForm + " - at position *" + textOffset + "* in - Text[..." + context.text.substring(start,end) + "...]"
-        if (!id.isEmpty) id+": " else "" +surfaceForm+" -"+score+"-> "+resource+" - at position *"+textOffset+"* in - "+text
+        if (!id.isEmpty) id+": " else "" +surfaceForm+" -"+score+"-> "+resource+" - at position *"+textOffset+"* in - "+text + " Features: " + features
     }
 
     override def hashCode = {
@@ -92,10 +93,17 @@ class DBpediaResourceOccurrence(val id : String,
         id+"\t"+resource.uri+"\t"+surfaceForm.name+"\t"+context.text.replaceAll("\\s+", " ")+"\t"+textOffset+"\t"+resource.types.map(_.typeID).mkString(",")
     }
 
-
     def setSimilarityScore(s: Double) {
         setFeature(new Score("finalScore", similarityScore))
         this.similarityScore = s
+    }
+
+    def setEntityScore(s: Double) {
+        this.entityScore = s
+    }
+
+    def setSFScore(s: Double) {
+        this.SFScore = s
     }
 
     def setPercentageOfSecondRank(p: Double) {

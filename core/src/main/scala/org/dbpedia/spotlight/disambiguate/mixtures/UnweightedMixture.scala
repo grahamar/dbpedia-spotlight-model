@@ -13,6 +13,8 @@ class UnweightedMixture(features: Set[String]) extends Mixture(1) {
 
   def getScore(occurrence: DBpediaResourceOccurrence): Double = {
     val fs = occurrence.features.values.filter({ f: Feature => features.contains(f.featureName) }).map(_.value.asInstanceOf[Double])
+    //println("Occ features: " + occurrence.features.values)
+    //println("Mixture score: " + MathUtil.lnproduct(fs))
     MathUtil.lnproduct(fs)
   }
 
