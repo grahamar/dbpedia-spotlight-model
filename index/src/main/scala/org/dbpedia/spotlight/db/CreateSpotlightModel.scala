@@ -257,6 +257,7 @@ object CreateSpotlightModel {
     } else {
       new LanguageIndependentTokenizer(Set[String](), stemmer, locale, tokenStore)
     }
+    // Chris: this line can be source of Java Heap space error
     val fsaDict = FSASpotter.buildDictionary(sfStore, tokenizer)
 
     MemoryStore.dump(fsaDict, new File(outputFolder, "fsa_dict.mem"))

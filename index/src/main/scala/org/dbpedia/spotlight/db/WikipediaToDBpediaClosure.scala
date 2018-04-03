@@ -94,11 +94,16 @@ class WikipediaToDBpediaClosure (
    * @return
    */
   def wikipediaToDBpediaURI(url: String): String = {
-
-    val uri = if(url.startsWith("http:")) {
-      getEndOfChainURI(decodedNameFromURL(url))
-    } else {
-      getEndOfChainURI(decodeURL(url))
+   val uri = try {
+     // Chris: some error here 
+     if(url.startsWith("http:")) {
+       getEndOfChainURI(decodedNameFromURL(url))
+     } else {
+       getEndOfChainURI(decodeURL(url))
+     }
+    } catch {
+      // Chris: hack for encoding error
+      case e: Exception => getEndOfChainURI(removeLeadingSlashes(cutOffBeforeAnchor(url.split("/").last)))
     }
 
     if (disambiguationsSet.contains(uri) || uri == null)

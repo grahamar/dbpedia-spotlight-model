@@ -52,10 +52,25 @@ object CandidateMapSource {
 
           candidateMap.put(c, initialCount + count.toInt)
         } catch {
-          case e: NotADBpediaResourceException     => uriIgnored += 1
+          case e: NotADBpediaResourceException     => {
+            val Array(sf, wikiurl, count) = line.trim().split('\t')
+            val uri = wikipediaToDBpediaClosure.wikipediaToDBpediaURI(DBpediaResourceSource.normalizePigURI(wikiurl))
+            uriIgnored += 1
+            //println("CandidateMapSource: NotADBPediaResourceException -- sf: " + sf + ", wikiurl: " + wikiurl + ", uri: " + uri)
+          }
           case e: ArrayIndexOutOfBoundsException   => SpotlightLog.warn(this.getClass, "WARNING: Could not read line.")
-          case e: DBpediaResourceNotFoundException => uriNotFound += 1
-          case e: SurfaceFormNotFoundException     => sfNotFound += 1
+          case e: DBpediaResourceNotFoundException => { 
+            val Array(sf, wikiurl, count) = line.trim().split('\t')
+            val uri = wikipediaToDBpediaClosure.wikipediaToDBpediaURI(DBpediaResourceSource.normalizePigURI(wikiurl))
+            uriNotFound += 1
+            //println("CandidateMapSource: DBpediaResourceNotFoundException -- sf: " + sf + ", wikiurl: " + wikiurl + ", uri: " + uri)
+          }
+          case e: SurfaceFormNotFoundException     => {
+            val Array(sf, wikiurl, count) = line.trim().split('\t')
+            val uri = wikipediaToDBpediaClosure.wikipediaToDBpediaURI(DBpediaResourceSource.normalizePigURI(wikiurl))
+            sfNotFound += 1
+            //println("CandidateMapSource: SurfaceFormNotFoundException -- sf: " + sf + ", wikiurl: " + wikiurl + ", uri: " + uri)
+          }
           case e: scala.MatchError => //Ignore lines with multiple tabs
         }
       }

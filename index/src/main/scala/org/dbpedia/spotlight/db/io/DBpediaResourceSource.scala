@@ -14,6 +14,9 @@ import org.dbpedia.spotlight.model._
 import org.dbpedia.spotlight.exceptions.NotADBpediaResourceException
 import org.semanticweb.yars.nx.parser.NxParser
 
+// Chris: trying to fix URI not found errors
+import java.net.URLDecoder
+
 import org.dbpedia.extraction.util.WikiUtil
 
 
@@ -27,6 +30,9 @@ import org.dbpedia.extraction.util.WikiUtil
  */
 
 object DBpediaResourceSource {
+  
+  // Chris: trying to fix URI not found errors
+  private def decodeURL(uri: String) = URLDecoder.decode(uri,"utf-8")
 
   def fromTSVInputStream(
     conceptList: InputStream,
@@ -145,7 +151,10 @@ object DBpediaResourceSource {
           val Array(uri: String, typeURI: String) = line.trim().split('\t')
 
           try {
-            resourceByURI(new DBpediaResource(uri).uri).types ::= OntologyType.fromURI(typeURI)
+            // Chris: trying to fix URI not found errors
+            val decodedUri = decodeURL(uri)
+            resourceByURI(new DBpediaResource(decodedUri).uri).types ::= OntologyType.fromURI(typeURI)
+            //resourceByURI(new DBpediaResource(uri).uri).types ::= OntologyType.fromURI(typeURI)
           } catch {
             case e: java.util.NoSuchElementException =>
               uriNotFound += uri
@@ -167,11 +176,17 @@ object DBpediaResourceSource {
         if (!subj.contains("__")) {
           val obj  = triple(2).toString.replace(namespace, "")
 
+          // Chris: trying to fix URI not found errors
+          val decodedUri = decodeURL(subj)
+
           try {
             if(!obj.endsWith("owl#Thing"))
-              resourceByURI(new DBpediaResource(subj).uri).types ::= OntologyType.fromURI(obj)
+              // Chris: trying to fix URI not found errors
+              resourceByURI(new DBpediaResource(decodedUri).uri).types ::= OntologyType.fromURI(obj)
+              //resourceByURI(new DBpediaResource(subj).uri).types ::= OntologyType.fromURI(obj)
           } catch {
             case e: java.util.NoSuchElementException =>
+              //println("Instance type URI not found: " + subj)
               uriNotFound += subj
           }
         }

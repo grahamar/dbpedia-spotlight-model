@@ -80,7 +80,6 @@ class MemoryStoreIndexer(val baseDir: File, val quantizedCountStore: MemoryQuant
       case _ =>
     }
 
-
     if (tokenizer.isDefined) {
 
      println("Tokenizing sfs and correcting ngrams")
@@ -115,7 +114,9 @@ class MemoryStoreIndexer(val baseDir: File, val quantizedCountStore: MemoryQuant
         case (ngram: Seq[String], id: Int) if(ngram.size > 1) => {
           getAllNgrams(ngram).foreach{ subngram: Seq[String] =>
             sfId.get(subngram.mkString(" ")) match {
-              case Some(subID) if(totalCountForID(subID) > 0 && totalCountForID(id) > 0) => totalCountForID(subID) = (totalCountForID(subID) - (1.25 * annotatedCountForID(id))).toInt
+              // Chris: commented because this looks wrong (where does "1.25" come from??)
+              //case Some(subID) if(totalCountForID(subID) > 0 && totalCountForID(id) > 0) => totalCountForID(subID) = (totalCountForID(subID) - (1.25 * annotatedCountForID(id))).toInt
+              case Some(subID) if(totalCountForID(subID) > 0 && totalCountForID(id) > 0) => totalCountForID(subID) = (totalCountForID(subID) - annotatedCountForID(id)).toInt
               case _ =>
             }
           }
@@ -145,11 +146,7 @@ class MemoryStoreIndexer(val baseDir: File, val quantizedCountStore: MemoryQuant
   }
 
 
-
-
-
   //RESOURCES
-
   def addResource(resource: DBpediaResource, count: Int) {
     throw new NotImplementedException()
   }
