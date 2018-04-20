@@ -37,7 +37,7 @@ abstract class DBSpotter(
 
   def generateCandidates(sentence: List[Token]): Seq[Span]
 
-  val MIN_CONFIDENCE = 0.1
+  val MIN_CONFIDENCE = 0.01
 
   def extract(text: Text): java.util.List[SurfaceFormOccurrence] = {
 
@@ -115,12 +115,15 @@ abstract class DBSpotter(
     try {
       spotFeatureWeightVector match {
         case Some(weights) => {
+          //println("Spot: " + spot)
 
           val (sf, p) = try {
             val sf = surfaceFormStore.getSurfaceForm(spot)
+            //println("Got sf: " + sf + " prob: " + sf.annotationProbability)
             (sf, sf.annotationProbability)
           } catch {
             case e: SurfaceFormNotFoundException => {
+              //println("SurfaceFormNotFoundException")
               surfaceFormStore.getRankedSurfaceFormCandidates(spot).headOption match {
                 case Some(p) => p
                 case None => throw e
@@ -129,12 +132,13 @@ abstract class DBSpotter(
           }
 
           sf.name = spot
+          //println("Spot name: " + sf.name + " Spot Features: " + DBSpotter.spotFeatures(spot, p))
           (Some(sf), weights dot DBSpotter.spotFeatures(spot, p))
         }
         case None => (Some(surfaceFormStore.getSurfaceForm(spot)), surfaceFormStore.getSurfaceForm(spot).annotationProbability)
       }
     } catch {
-      case e: Exception => (None, 0.0)
+      case e: Exception => (None, Float.MinValue)
     }
   }
 
@@ -181,26 +185,32 @@ abstract class DBSpotter(
       val spot = sortedSpots(i)
 
       if (lastSpot != null && lastSpot.intersects(spot)) {
-
+        //println("lastSpot: " + lastSpot + " and current spot: " + spot + " are in competition!")
         val spotHasBetterType = typeOrder.indexOf(spot.featureValue[String]("spot_type")) < typeOrder.indexOf(lastSpot.featureValue[String]("spot_type"))
         val spotIsLonger = spot.surfaceForm.name.length > lastSpot.surfaceForm.name.length
 
         if(spotIsLonger && spot.spotProb > lastSpot.spotProb/2.0) {
           remove += i-1
           lastSpot = spot
+          //println(spot + " wins because it is longer, and its probability is 2x of " + lastSpot) 
         } else if(!spotIsLonger && !(spot.spotProb > lastSpot.spotProb*2.0)) {
           remove += i
           lastSpot = lastSpot
+          //println(lastSpot + " wins because it is longer, and probability of " + spot + " is not 2x") 
         } else if(spot.spotProb == lastSpot.spotProb && spotHasBetterType) {
+          //println(spot + " wins because it has better type") 
           remove += i-1
           lastSpot = spot
         } else if (spot.spotProb == lastSpot.spotProb && !spotHasBetterType) {
+          //println(lastSpot + " wins because it has better type") 
           remove += i
           lastSpot = lastSpot
         } else if(spot.spotProb > lastSpot.spotProb) {
+          //println(spot + " wins because it has higher probability") 
           remove += i-1
           lastSpot = spot
         } else {
+          //println(lastSpot + " wins because it has higher probability") 
           remove += i
           lastSpot = lastSpot
         }
