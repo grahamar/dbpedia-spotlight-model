@@ -199,29 +199,29 @@ class DBTwoStepDisambiguator(
         top.setPercentageOfSecondRank(MathUtil.exp(bottom.similarityScore - top.similarityScore))
       }
 
-      val cScores = candOccs.map(_.contextualScore) :+ -1.0
-      val contextMin = cScores.min
-      val contextMax = cScores.max
-      val contextDenom = contextMax - contextMin
-      val normContextScores = cScores.map(v => (v - contextMin) / contextDenom)
+      //val cScores = candOccs.map(_.contextualScore) :+ -1.0
+      //val contextMin = cScores.min
+      //val contextMax = cScores.max
+      //val contextDenom = contextMax - contextMin
+      //val normContextScores = cScores.map(v => (v - contextMin) / contextDenom)
 
-//      val contextSoftMaxTotal    = linalg.softmax(normContextScores)
+      //val contextSoftMaxTotal    = linalg.softmax(normContextScores)
 
       // Chris: note omission of nilSFScore here, because it's computed as Option[] above
-      val sfScores = candOccs.map(_.SFScore) :+ -1.0
-      val sfMin = sfScores.min
-      val sfMax = sfScores.max
-      val sfDenom = sfMax - sfMin
-      val normSfScores = sfScores.map(v => (v - sfMin) / sfDenom)
-//      val sfSoftMaxTotal     = linalg.softmax(normSfScores)
+      //val sfScores = candOccs.map(_.SFScore) :+ -1.0
+      //val sfMin = sfScores.min
+      //val sfMax = sfScores.max
+      //val sfDenom = sfMax - sfMin
+      //val normSfScores = sfScores.map(v => (v - sfMin) / sfDenom)
+      //val sfSoftMaxTotal     = linalg.softmax(normSfScores)
 
 
-      val entityScores = candOccs.map(_.entityScore) :+ -1.0
-      val entityMin = entityScores.min
-      val entityMax = entityScores.max
-      val entityDenom = entityMax - entityMin
-      val normEntityScores = entityScores.map(v => (v - entityMin) / entityDenom)
-//      val entitySoftMaxTotal     = linalg.softmax(normEntityScores)
+      //val entityScores = candOccs.map(_.entityScore) :+ -1.0
+      //val entityMin = entityScores.min
+      //val entityMax = entityScores.max
+      //val entityDenom = entityMax - entityMin
+      //val normEntityScores = entityScores.map(v => (v - entityMin) / entityDenom)
+      //val entitySoftMaxTotal     = linalg.softmax(normEntityScores)
 
       candOccs.foreach{ o: DBpediaResourceOccurrence =>
         // Chris: now recompute scores with softmax over each column
@@ -237,9 +237,11 @@ class DBTwoStepDisambiguator(
 
       }
 
-      val similaritySoftMaxTotal = linalg.softmax(candOccs.map(_.similarityScore))
-      candOccs.foreach{ o: DBpediaResourceOccurrence =>
-        o.setSimilarityScore(MathUtil.exp(o.similarityScore - similaritySoftMaxTotal))
+      if (candOccs.size > 0) {
+        val similaritySoftMaxTotal = linalg.softmax(candOccs.map(_.similarityScore))
+        candOccs.foreach{ o: DBpediaResourceOccurrence =>
+          o.setSimilarityScore(MathUtil.exp(o.similarityScore - similaritySoftMaxTotal))
+        }
       }
 
       val finalOccs = candOccs.sortBy( o => o.similarityScore ).reverse
