@@ -156,7 +156,6 @@ class DBTwoStepDisambiguator(
       eNIL.setFeature(new Score("P(c|e)", nilContextScore))
       eNIL.setFeature(new Score("P(e)",   MathUtil.ln( 1 / surfaceFormStore.getTotalAnnotatedCount.toDouble ) )) //surfaceFormStore.getTotalAnnotatedCount = total number of entity mentions
       val nilEntityScore = mixture.getScore(eNIL)
-      //println("eNil: " + eNIL)
 
       //Get all other entities:
       val candOccs = occs.getOrElse(aSfOcc, List[Candidate]())
@@ -200,8 +199,6 @@ class DBTwoStepDisambiguator(
         top.setPercentageOfSecondRank(MathUtil.exp(bottom.similarityScore - top.similarityScore))
       }
 
-      // val similaritySoftMaxTotal = linalg.softmax(candOccs.map(_.similarityScore) :+ nilEntityScore)
-
       val cScores = candOccs.map(_.contextualScore) :+ -1.0
       val contextMin = cScores.min
       val contextMax = cScores.max
@@ -227,8 +224,6 @@ class DBTwoStepDisambiguator(
 //      val entitySoftMaxTotal     = linalg.softmax(normEntityScores)
 
       candOccs.foreach{ o: DBpediaResourceOccurrence =>
-        // o.setSimilarityScore( MathUtil.exp(o.similarityScore - similaritySoftMaxTotal) ) // e^xi / \sum e^xi
-
         // Chris: now recompute scores with softmax over each column
         // o.setContextualScore( MathUtil.exp(((o.contextualScore - contextMin) / contextDenom)  - contextSoftMaxTotal) * 2.0)    // e^xi / \sum e^xi
         o.setFeature(new Score("P(c|e)", o.contextualScore))
@@ -242,7 +237,16 @@ class DBTwoStepDisambiguator(
 
       }
 
+      val similaritySoftMaxTotal = linalg.softmax(candOccs.map(_.similarityScore))
+      candOccs.foreach{ o: DBpediaResourceOccurrence =>
+        o.setSimilarityScore(MathUtil.exp(o.similarityScore - similaritySoftMaxTotal))
+      }
+
       val finalOccs = candOccs.sortBy( o => o.similarityScore ).reverse
+      //println("printing sorted occs...")
+      //finalOccs.foreach{ o: DBpediaResourceOccurrence =>
+      //  println("occ: " + o)
+      //}
 
       acc + (aSfOcc -> finalOccs)
     })
