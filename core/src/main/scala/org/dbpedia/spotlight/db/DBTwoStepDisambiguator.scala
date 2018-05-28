@@ -186,8 +186,6 @@ class DBTwoStepDisambiguator(
         // Use the mixture to combine the scores
         // Chris: below we will pass feature columns through softmax 
         resOcc.setSimilarityScore(mixture.getScore(resOcc))
-        //println("Before softmax: Candidate: " + resOcc)
-
         resOcc
       }
       }
@@ -202,16 +200,15 @@ class DBTwoStepDisambiguator(
         top.setPercentageOfSecondRank(MathUtil.exp(bottom.similarityScore - top.similarityScore))
       }
 
-      //Compute the final score as a softmax function, get the total score first:
-      val similaritySoftMaxTotal = linalg.softmax(candOccs.map(_.similarityScore) :+ nilEntityScore)
+      // val similaritySoftMaxTotal = linalg.softmax(candOccs.map(_.similarityScore) :+ nilEntityScore)
 
       val cScores = candOccs.map(_.contextualScore) :+ -1.0
       val contextMin = cScores.min
       val contextMax = cScores.max
       val contextDenom = contextMax - contextMin
       val normContextScores = cScores.map(v => (v - contextMin) / contextDenom)
-      val contextSoftMaxTotal    = linalg.softmax(normContextScores)
-      //val contextSoftMaxTotal    = linalg.softmax(candOccs.map(_.contextualScore) :+ nilContextScore)
+
+//      val contextSoftMaxTotal    = linalg.softmax(normContextScores)
 
       // Chris: note omission of nilSFScore here, because it's computed as Option[] above
       val sfScores = candOccs.map(_.SFScore) :+ -1.0
@@ -219,8 +216,7 @@ class DBTwoStepDisambiguator(
       val sfMax = sfScores.max
       val sfDenom = sfMax - sfMin
       val normSfScores = sfScores.map(v => (v - sfMin) / sfDenom)
-      val sfSoftMaxTotal     = linalg.softmax(normSfScores)
-      //val sfSoftMaxTotal     = linalg.softmax(candOccs.map(_.SFScore) :+ -1.0)
+//      val sfSoftMaxTotal     = linalg.softmax(normSfScores)
 
 
       val entityScores = candOccs.map(_.entityScore) :+ -1.0
@@ -228,30 +224,27 @@ class DBTwoStepDisambiguator(
       val entityMax = entityScores.max
       val entityDenom = entityMax - entityMin
       val normEntityScores = entityScores.map(v => (v - entityMin) / entityDenom)
-      val entitySoftMaxTotal     = linalg.softmax(normEntityScores)
-      //val entitySoftMaxTotal     = linalg.softmax(candOccs.map(_.entityScore) :+ -1.0)
-      //val entitySoftMaxTotal     = linalg.softmax(candOccs.map(_.entityScore) :+ nilEntityScore)
+//      val entitySoftMaxTotal     = linalg.softmax(normEntityScores)
 
       candOccs.foreach{ o: DBpediaResourceOccurrence =>
         // o.setSimilarityScore( MathUtil.exp(o.similarityScore - similaritySoftMaxTotal) ) // e^xi / \sum e^xi
 
         // Chris: now recompute scores with softmax over each column
-        o.setContextualScore( MathUtil.exp(((o.contextualScore - contextMin) / contextDenom)  - contextSoftMaxTotal) * 2.0)    // e^xi / \sum e^xi
+        // o.setContextualScore( MathUtil.exp(((o.contextualScore - contextMin) / contextDenom)  - contextSoftMaxTotal) * 2.0)    // e^xi / \sum e^xi
         o.setFeature(new Score("P(c|e)", o.contextualScore))
 
-        o.setFeature(new Score("P(s|e)", MathUtil.exp(((o.SFScore - sfMin) / sfDenom) - sfSoftMaxTotal) * 1.0))
-        o.setFeature(new Score("P(e)", MathUtil.exp(((o.entityScore - entityMin) / entityDenom) - entitySoftMaxTotal) * 0.5))
+        o.setFeature(new Score("P(s|e)", o.SFScore))
+        // o.setFeature(new Score("P(s|e)", MathUtil.exp(((o.SFScore - sfMin) / sfDenom) - sfSoftMaxTotal) * 1.0))
+        o.setFeature(new Score("P(e)", o.entityScore))
 
         // Use the mixture to recompute the scores
         o.setSimilarityScore(mixture.getScore(o))
-        //println("After softmax: Candidate: " + o)
-  
+
       }
 
       val finalOccs = candOccs.sortBy( o => o.similarityScore ).reverse
 
       acc + (aSfOcc -> finalOccs)
-      //acc + (aSfOcc -> candOccs)
     })
 
 
