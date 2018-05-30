@@ -50,6 +50,9 @@ import java.util.List;
 @Setter
 public class SpotlightInterface {
 
+    // TODO: config
+    private int MAX_SPOTS = 200;
+
     private Log LOG = LogFactory.getLog(this.getClass());
 
     // Name of the REST api so that we can announce it in the log (can be disambiguate, annotate, candidates)
@@ -122,6 +125,12 @@ public class SpotlightInterface {
             Server.getTokenizer().tokenizeMaybe(context);
 
         List<SurfaceFormOccurrence> spots = spotter.extract(context);
+
+        // trim list to MAX_SPOTS
+        if (spots.size() > MAX_SPOTS) {
+            spots = spots.subList(0, MAX_SPOTS);
+        }
+
         return spots;
     }
 
