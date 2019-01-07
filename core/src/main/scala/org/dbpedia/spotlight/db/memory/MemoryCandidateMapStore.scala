@@ -24,6 +24,7 @@ class MemoryCandidateMapStore
 
   def getCandidates(surfaceform: SurfaceForm): Set[Candidate] = {
     try {
+      println("surface form: " + surfaceform)
       candidates(surfaceform.id).zip(candidateCounts(surfaceform.id)).map {
             case (resID, count) => new Candidate(surfaceform, resourceStore.getResource(resID), qc(count))
       }.toSet
