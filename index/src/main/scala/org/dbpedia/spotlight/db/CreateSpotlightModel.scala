@@ -267,7 +267,8 @@ object CreateSpotlightModel {
     else
       FileUtils.write(
         new File(outputFolder, "spotter_thresholds.txt"),
-        "1.0 0.2 -0.2 0.1" //Defaults!
+//        "1.0 0.2 -0.2 0.1" //Defaults!
+        "1.0 0.0 0.0 0.0" //Chris: Defaults!
       )
 
 
