@@ -50,7 +50,7 @@ import java.util.List;
 @Setter
 public class SpotlightInterface {
 
-    // TODO: config
+    // TODO: let user configure
     private int MAX_SPOTS = 200;
 
     private Log LOG = LogFactory.getLog(this.getClass());

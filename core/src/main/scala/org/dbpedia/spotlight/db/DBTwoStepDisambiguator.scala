@@ -156,6 +156,7 @@ class DBTwoStepDisambiguator(
       eNIL.setFeature(new Score("P(c|e)", nilContextScore))
       eNIL.setFeature(new Score("P(e)",   MathUtil.ln( 1 / surfaceFormStore.getTotalAnnotatedCount.toDouble ) )) //surfaceFormStore.getTotalAnnotatedCount = total number of entity mentions
       val nilEntityScore = mixture.getScore(eNIL)
+      println("NIL Entity score: " + nilEntityScore)
 
       //Get all other entities:
       val candOccs = occs.getOrElse(aSfOcc, List[Candidate]())
@@ -185,6 +186,9 @@ class DBTwoStepDisambiguator(
         // Use the mixture to combine the scores
         // Chris: below we will pass feature columns through softmax 
         resOcc.setSimilarityScore(mixture.getScore(resOcc))
+        println("Surface form: " + cand.surfaceForm)
+        println("Resource: " + cand.resource)
+        println("similarity score: " + resOcc.similarityScore)
         resOcc
       }
       }
