@@ -44,7 +44,7 @@ class SurfaceForm(var name : String) extends Serializable
           this.totalCount = totalCount
       }
     }
-    println("New sf - name is: " + name + " annotatedCount: " + annotatedCount + " totalCount: " + totalCount)
+//    println("New sf - name is: " + name + " annotatedCount: " + annotatedCount + " totalCount: " + totalCount)
   }
 
   name = name.replace("’", "'")

@@ -98,7 +98,7 @@ abstract class DBSpotter(
                   break()
                 }
                 else {
-                  println("Dropping sfMatch: " + sfMatch)
+//                  println("Dropping sfMatch: " + sfMatch)
                 }
               }
             }
@@ -193,32 +193,32 @@ abstract class DBSpotter(
       val spot = sortedSpots(i)
 
       if (lastSpot != null && lastSpot.intersects(spot)) {
-        println("lastSpot: " + lastSpot + " and current spot: " + spot + " are in competition!")
+//        println("lastSpot: " + lastSpot + " and current spot: " + spot + " are in competition!")
         val spotHasBetterType = typeOrder.indexOf(spot.featureValue[String]("spot_type")) < typeOrder.indexOf(lastSpot.featureValue[String]("spot_type"))
         val spotIsLonger = spot.surfaceForm.name.length > lastSpot.surfaceForm.name.length
 
         if(spotIsLonger && spot.spotProb > lastSpot.spotProb/2.0) {
           remove += i-1
           lastSpot = spot
-          println(spot + " wins because it is longer, and its probability is 2x of " + lastSpot)
+//          println(spot + " wins because it is longer, and its probability is 2x of " + lastSpot)
         } else if(!spotIsLonger && !(spot.spotProb > lastSpot.spotProb*2.0)) {
           remove += i
           lastSpot = lastSpot
-          println(lastSpot + " wins because it is longer, and probability of " + spot + " is not 2x")
+//          println(lastSpot + " wins because it is longer, and probability of " + spot + " is not 2x")
         } else if(spot.spotProb == lastSpot.spotProb && spotHasBetterType) {
-          println(spot + " wins because it has better type")
+//          println(spot + " wins because it has better type")
           remove += i-1
           lastSpot = spot
         } else if (spot.spotProb == lastSpot.spotProb && !spotHasBetterType) {
-          println(lastSpot + " wins because it has better type")
+//          println(lastSpot + " wins because it has better type")
           remove += i
           lastSpot = lastSpot
         } else if(spot.spotProb > lastSpot.spotProb) {
-          println(spot + " wins because it has higher probability")
+//          println(spot + " wins because it has higher probability")
           remove += i-1
           lastSpot = spot
         } else {
-          println(lastSpot + " wins because it has higher probability")
+//          println(lastSpot + " wins because it has higher probability")
           remove += i
           lastSpot = lastSpot
         }

@@ -112,17 +112,17 @@ class DBTwoStepDisambiguator(
 
           val cands = candidateSearcher.getCandidates(sfOcc.surfaceForm)
           SpotlightLog.debug(this.getClass, "# candidates for: %s = %s.", sfOcc.surfaceForm, cands.size)
-          println("# candidates for: %s = %s.", sfOcc.surfaceForm, cands.size)
+//          println("# candidates for: %s = %s.", sfOcc.surfaceForm, cands.size)
 
           if (cands.size > MAX_CANDIDATES) {
             SpotlightLog.debug(this.getClass, "Reducing number of candidates to %d.", MAX_CANDIDATES)
-            println("Reducing number of candidates to %d.", MAX_CANDIDATES)
+//            println("Reducing number of candidates to %d.", MAX_CANDIDATES)
             cands.toList.sortBy( -_.prior ).take(MAX_CANDIDATES).toSet
           } else {
             cands
           }
         }
-        println("Took candidates: " + candidateRes)
+//        println("Took candidates: " + candidateRes)
 
         allCandidateResources ++= candidateRes.map(_.resource)
         acc + (sfOcc -> candidateRes.toList)
@@ -156,7 +156,7 @@ class DBTwoStepDisambiguator(
       eNIL.setFeature(new Score("P(c|e)", nilContextScore))
       eNIL.setFeature(new Score("P(e)",   MathUtil.ln( 1 / surfaceFormStore.getTotalAnnotatedCount.toDouble ) )) //surfaceFormStore.getTotalAnnotatedCount = total number of entity mentions
       val nilEntityScore = mixture.getScore(eNIL)
-      println("NIL Entity score: " + nilEntityScore)
+//      println("NIL Entity score: " + nilEntityScore)
 
       //Get all other entities:
       val candOccs = occs.getOrElse(aSfOcc, List[Candidate]())
@@ -186,9 +186,9 @@ class DBTwoStepDisambiguator(
         // Use the mixture to combine the scores
         // Chris: below we will pass feature columns through softmax 
         resOcc.setSimilarityScore(mixture.getScore(resOcc))
-        println("Surface form: " + cand.surfaceForm)
-        println("Resource: " + cand.resource)
-        println("similarity score: " + resOcc.similarityScore)
+//        println("Surface form: " + cand.surfaceForm)
+//        println("Resource: " + cand.resource)
+//        println("similarity score: " + resOcc.similarityScore)
         resOcc
       }
       }
@@ -249,10 +249,10 @@ class DBTwoStepDisambiguator(
       }
 
       val finalOccs = candOccs.sortBy( o => o.similarityScore ).reverse
-      println("printing sorted occs...")
-      finalOccs.foreach{ o: DBpediaResourceOccurrence =>
-        println("occ: " + o)
-      }
+//      println("printing sorted occs...")
+//      finalOccs.foreach{ o: DBpediaResourceOccurrence =>
+//        println("occ: " + o)
+//      }
 
       acc + (aSfOcc -> finalOccs)
     })

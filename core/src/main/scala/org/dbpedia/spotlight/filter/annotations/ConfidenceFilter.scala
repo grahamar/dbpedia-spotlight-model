@@ -32,7 +32,7 @@ class PercentageOfSecondFilter(val confidence : Double) extends AnnotationFilter
     override def touchOcc(occ : DBpediaResourceOccurrence) : Option[DBpediaResourceOccurrence] = {
         if(occ.percentageOfSecondRank > (1-squaredConfidence)) {
             SpotlightLog.debug(this.getClass, "(c=%s) filtered out by threshold of second ranked percentage (%.3f>%.3f): %s", confidence,occ.percentageOfSecondRank, 1-squaredConfidence, occ)
-            println("(c=%s) filtered out by threshold of second ranked percentage (%.3f>%.3f): %s", confidence,occ.percentageOfSecondRank, 1-squaredConfidence, occ)
+//            println("(c=%s) filtered out by threshold of second ranked percentage (%.3f>%.3f): %s", confidence,occ.percentageOfSecondRank, 1-squaredConfidence, occ)
             None
         }
         else {
