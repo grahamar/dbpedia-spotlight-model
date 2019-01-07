@@ -38,6 +38,8 @@ abstract class DBSpotter(
   def generateCandidates(sentence: List[Token]): Seq[Span]
 
   val MIN_CONFIDENCE = 0.01
+  // Chris: this is used to filter out very rare SFs
+  val MIN_ANNOTATED_OCCS = 25
 
   def extract(text: Text): java.util.List[SurfaceFormOccurrence] = {
 
@@ -46,6 +48,7 @@ abstract class DBSpotter(
 
     var spots = ListBuffer[SurfaceFormOccurrence]()
     val sentences: List[List[Token]] = DBSpotter.tokensToSentences(text.featureValue[List[Token]]("tokens").get)
+
 
     //Go through all sentences
     sentences.foreach{ sentence: List[Token] =>
@@ -86,12 +89,17 @@ abstract class DBSpotter(
 
               SpotlightLog.debug(this.getClass, "type:"+chunkSpan.getType)
               if (sfMatch.isDefined) {
-                //The sub-chunk is in the dictionary, finish the processing of this chunk
-                val spotOcc = new SurfaceFormOccurrence(sfMatch.get, text, startOffset, Provenance.Annotation, spotScore(spot)._2)
-                spotOcc.setFeature(new Nominal("spot_type", chunkSpan.getType))
-                spotOcc.setFeature(new Feature("token_types", tokenTypes.slice(startToken, lastToken)))
-                spots += spotOcc
-                break()
+                if (sfMatch.get.annotatedCount >= MIN_ANNOTATED_OCCS) {
+                  //The sub-chunk is in the dictionary, finish the processing of this chunk
+                  val spotOcc = new SurfaceFormOccurrence(sfMatch.get, text, startOffset, Provenance.Annotation, spotScore(spot)._2)
+                  spotOcc.setFeature(new Nominal("spot_type", chunkSpan.getType))
+                  spotOcc.setFeature(new Feature("token_types", tokenTypes.slice(startToken, lastToken)))
+                  spots += spotOcc
+                  break()
+                }
+                else {
+                  println("Dropping sfMatch: " + sfMatch)
+                }
               }
             }
           }
