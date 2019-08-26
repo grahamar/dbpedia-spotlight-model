@@ -63,8 +63,6 @@ lazy val core = project
       "weka" % "weka" % "3.7.3",
       "net.liftweb" %% "lift-json" % "3.0.1",
       "net.sf.opencsv" % "opencsv" % "2.0",
-      "hsqldb" % "hsqldb" % "1.8.0.1",
-      "com.mongodb" % "mongo" % "1.0",
       "it.unimi.dsi" % "fastutil" % "6.3",
       "opennlp" % "maxent" % "3.0.0",
       "org.apache.opennlp" % "opennlp-tools" % "1.5.3",
@@ -73,12 +71,12 @@ lazy val core = project
       "com.esotericsoftware.kryo" % "kryo" % "2.20",
       "org.apache.jdbm" % "jdbm" % "3.0-alpha5",
       "trove" % "trove" % "1.1-beta-5",
-      "org.apache.mahout" % "mahout-collections" % "1.0",
       "org.apache.commons" % "commons-math" % "2.2",
       "io.grhodes" %% "scala-aho-corasick" % "0.3",
       "org.scalaz" %% "scalaz-core" % "7.1.17",
       "org.scalanlp" %% "breeze" % "0.13",
       "com.typesafe.akka" %% "akka-actor" % "2.4.12",
+      "hsqldb" % "hsqldb" % "1.8.0.1" % Provided,
       "org.projectlombok" % "lombok" % "1.16.16" % Provided
     )
   )
