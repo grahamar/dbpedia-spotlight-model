@@ -1,6 +1,6 @@
 package org.dbpedia.spotlight.db.disk
 
-import net.kotek.jdbm.DBMaker
+import org.apache.jdbm.DBMaker
 
 /**
  * Base class for JDBM disk-based stores.

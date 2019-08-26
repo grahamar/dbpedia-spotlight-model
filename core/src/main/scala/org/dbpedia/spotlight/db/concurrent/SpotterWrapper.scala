@@ -3,10 +3,9 @@ package org.dbpedia.spotlight.db.concurrent
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-import akka.actor.SupervisorStrategy.Restart
-import akka.actor.{Actor, ActorSystem, OneForOneStrategy, Props}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.ask
-import akka.routing.SmallestMailboxRouter
+import akka.routing.{ActorRefRoutee, Router, SmallestMailboxRoutingLogic}
 import akka.util
 import org.dbpedia.spotlight.model.{SurfaceFormOccurrence, Text}
 import org.dbpedia.spotlight.spot.Spotter
@@ -24,22 +23,18 @@ class SpotterWrapper(val spotters: Seq[Spotter]) extends Spotter {
 
   var requestTimeout = 60
 
+  implicit val timeout = util.Timeout(requestTimeout, TimeUnit.SECONDS)
+
   val system = ActorSystem()
-  val workers = spotters.map { spotter: Spotter =>
-    system.actorOf(Props(new SpotterActor(spotter)))
+  var router = {
+    val routees = spotters.map { spotter =>
+      ActorRefRoutee(system.actorOf(Props(new SpotterActor(spotter))))
+    }.toIndexedSeq
+    val r = Router(SmallestMailboxRoutingLogic(), routees)
+    system.actorOf(Props(new SmallestMailboxRouterActor(r)))
   }
 
   def size: Int = spotters.size
-
-  val router = system.actorOf(Props[SpotterActor].withRouter(
-    SmallestMailboxRouter(workers.asInstanceOf).withSupervisorStrategy(
-      OneForOneStrategy(maxNrOfRetries = 10) {
-        case _: IOException => Restart
-      })
-  )
-  )
-
-  implicit val timeout = util.Timeout(requestTimeout, TimeUnit.SECONDS)
 
   def extract(text: Text): java.util.List[SurfaceFormOccurrence] = {
     val futureResult = router ? SpotterRequest(text)

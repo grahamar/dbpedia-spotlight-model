@@ -20,9 +20,7 @@ import org.dbpedia.extraction.util.WikiUtil
 
 import scala.collection.JavaConversions._
 
-
-@serializable
-class DBpediaResource(var uri : String,
+case class DBpediaResource(var uri : String,
                       var support : Int = 0,
                       var prior : Double = 0.0,
                       var types : List[OntologyType] = List[OntologyType]())

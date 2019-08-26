@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.SupervisorStrategy.Restart
 import akka.actor.{Actor, ActorSystem, OneForOneStrategy, Props}
 import akka.pattern.ask
-import akka.routing.SmallestMailboxRouter
+import akka.routing.{ActorRefRoutee, Router, SmallestMailboxRoutingLogic}
 import akka.util
 import org.apache.commons.lang.NotImplementedException
 import org.dbpedia.spotlight.db.model.{StringTokenizer, TextTokenizer}
@@ -24,23 +24,18 @@ class TokenizerWrapper(val tokenizers: Seq[TextTokenizer]) extends TextTokenizer
 
   var requestTimeout = 60
 
+  implicit val timeout = util.Timeout(requestTimeout, TimeUnit.SECONDS)
+
   val system = ActorSystem()
-  val workers = tokenizers.map { case tokenizer: TextTokenizer =>
-    system.actorOf(Props(new TokenizerActor(tokenizer)))
-  }.seq
+  var router = {
+    val routees = tokenizers.map { tokenizer =>
+      ActorRefRoutee(system.actorOf(Props(new TokenizerActor(tokenizer))))
+    }.toIndexedSeq
+    val r = Router(SmallestMailboxRoutingLogic(), routees)
+    system.actorOf(Props(new SmallestMailboxRouterActor(r)))
+  }
 
   def size: Int = tokenizers.size
-
-  val router = system.actorOf(Props[TokenizerActor].withRouter(
-    // This might be a hack
-    SmallestMailboxRouter(scala.collection.immutable.Iterable(workers:_*)).withSupervisorStrategy(
-      OneForOneStrategy(maxNrOfRetries = 10) {
-        case _: IOException => Restart
-      })
-  )
-  )
-
-  implicit val timeout = util.Timeout(requestTimeout, TimeUnit.SECONDS)
 
   override def tokenizeMaybe(text: Text) {
     val futureResult = router ? TokenizerRequest(text)
