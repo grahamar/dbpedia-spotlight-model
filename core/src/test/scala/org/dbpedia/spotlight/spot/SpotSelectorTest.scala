@@ -3,9 +3,8 @@ package org.dbpedia.spotlight.spot
 import org.dbpedia.spotlight.exceptions.ConfigurationException
 import org.dbpedia.spotlight.model.Factory
 import org.scalatest._
-import org.scalatest.matchers.ShouldMatchers
 
-class SpotSelectorTest extends FlatSpec with ShouldMatchers {
+class SpotSelectorTest extends FlatSpec with Matchers {
 
     "SpotSelector Factory" should "create a simple selector" in {
         Factory.SpotSelector.fromName("ShortSurfaceFormSelector")
@@ -20,11 +19,11 @@ class SpotSelectorTest extends FlatSpec with ShouldMatchers {
     }
 
     it should "throw an exception when a name does not exist" in {
-        evaluating { Factory.SpotSelector.fromName("fff") } should produce [ConfigurationException]
+        an [ConfigurationException] should be thrownBy { Factory.SpotSelector.fromName("fff") }
     }
 
     it should "throw an exception when the name is empty" in {
-        evaluating { Factory.SpotSelector.fromName("") } should produce [IllegalArgumentException]
+        an [IllegalArgumentException] should be thrownBy  { Factory.SpotSelector.fromName("") }
     }
 
 }

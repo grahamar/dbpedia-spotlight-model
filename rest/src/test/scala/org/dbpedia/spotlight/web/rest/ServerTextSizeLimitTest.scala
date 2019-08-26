@@ -1,14 +1,14 @@
 package org.dbpedia.spotlight.web.rest
 
 import java.net.URLEncoder
+
 import sys.process._
 import java.io._
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+
+import org.scalatest.{FlatSpec, Matchers}
 import org.dbpedia.spotlight.log.SpotlightLog
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import scala.IllegalArgumentException
 
 /**
  * Test if the current Spotlight is handling at least the last version entry (text or text inside a html page) size limit.
@@ -18,7 +18,7 @@ import scala.IllegalArgumentException
 //TODO remove Unix cURL dependency. It was almost DONE at: https://github.com/accardoso/dbpedia-spotlight/blob/dev/test-issue72/rest/src/test/scala/org/dbpedia/spotlight/web/rest/ServerTextSizeLimitTest.scala
 
 @RunWith(classOf[JUnitRunner])
-class ServerTextSizeLimitTest extends FlatSpec with ShouldMatchers {
+class ServerTextSizeLimitTest extends FlatSpec with Matchers {
 
   // Url of the HTML file (.html) that contains the text to the test with &url
   private val url:String = "https://raw.github.com/accardoso/test-files-spotlight/master/kjb/gospelAndPartialCorIIKingJamesBible_v3.html" // 489.1 kB
@@ -35,15 +35,15 @@ class ServerTextSizeLimitTest extends FlatSpec with ShouldMatchers {
   "A &url request" should "answer" in {
     if(urlResponse == null) urlResponse = ServerTextSizeLimitTest.testByUrl(url)
 
-    urlResponse.getAnswered should be === true
+    urlResponse.getAnswered should equal(true)
   }
 
   it should "answer a valid response" in {
     if(urlResponse == null) urlResponse = ServerTextSizeLimitTest.testByUrl(url)
 
     SpotlightLog.info(this.getClass, "******\"?URL=\" test******\n%s\n", urlResponse.toString)
-    urlResponse.getAnswered should be === true
-    urlResponse.isResponseValid should be === true
+    urlResponse.getAnswered should equal(true)
+    urlResponse.isResponseValid should equal(true)
   }
 
   it should "answer in 6 minutes" in {
@@ -51,7 +51,7 @@ class ServerTextSizeLimitTest extends FlatSpec with ShouldMatchers {
 
     ServerTextSizeLimitTest.removeTestFilesAndFolder() //To free the disk space when auto-running the tests
 
-    urlResponse.getAnswered should be === true
+    urlResponse.getAnswered should equal(true)
     urlResponse.getDuration should (be >= 0 and be <= 360) //360s=6min
     SpotlightLog.info(this.getClass, "\"?URL=\" test: time to answer = %ds\n", urlResponse.getDuration)
   }
@@ -68,7 +68,7 @@ class ServerTextSizeLimitTest extends FlatSpec with ShouldMatchers {
       textResponse = ServerTextSizeLimitTest.testByText(text)
     }
 
-    textResponse.getAnswered should be === true
+    textResponse.getAnswered should equal(true)
   }
 
   it should "answer a valid response" in {
@@ -80,8 +80,8 @@ class ServerTextSizeLimitTest extends FlatSpec with ShouldMatchers {
     }
 
     SpotlightLog.info(this.getClass, "******\"?TEXT=\" test******\n%s\n", textResponse.toString)
-    textResponse.getAnswered should be === true
-    textResponse.isResponseValid should be === true
+    textResponse.getAnswered should equal(true)
+    textResponse.isResponseValid should equal(true)
   }
 
   it should "answer in 6 minutes" in {
@@ -94,7 +94,7 @@ class ServerTextSizeLimitTest extends FlatSpec with ShouldMatchers {
 
     ServerTextSizeLimitTest.removeTestFilesAndFolder() //To do free the disk space when auto-running the tests
 
-    textResponse.getAnswered should be === true
+    textResponse.getAnswered should equal(true)
     textResponse.getDuration should (be >= 0 and be <= 360) //360s=6min
     SpotlightLog.info(this.getClass, "\"?TEXT=\" test: time to answer = %ds\n", textResponse.getDuration)
   }

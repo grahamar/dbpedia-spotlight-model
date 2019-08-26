@@ -1,9 +1,8 @@
 package org.dbpedia.spotlight.model
 
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.matchers.ShouldMatchers
 
 /**
  * The unit tests for Factory class.
@@ -12,40 +11,40 @@ import org.scalatest.matchers.ShouldMatchers
  */
 
 @RunWith(classOf[JUnitRunner])
-class FactoryTest extends FlatSpec with ShouldMatchers {
+class FactoryTest extends FlatSpec with Matchers {
 
   /* Test Factory.SurfaceForm */
   "The correct Surface Form" should "be created for the surface form string 'Berlin'" in {
     val surfaceFormString = "Berlin"
-    Factory.SurfaceForm.fromString(surfaceFormString).name should be === (new SurfaceForm(surfaceFormString)).name
+    Factory.SurfaceForm.fromString(surfaceFormString).name should equal((new SurfaceForm(surfaceFormString)).name)
   }
 
   it should "be created for the uri 'http://dbpedia.org/resource/Berlin'" in {
     val uriString = "http://dbpedia.org/resource/Berlin"
-    Factory.SurfaceForm.fromDBpediaResourceURI(uriString, false).name should be === (new SurfaceForm(uriString)).name
+    Factory.SurfaceForm.fromDBpediaResourceURI(uriString, false).name should equal((new SurfaceForm(uriString)).name)
   }
 
   it should "be created for the uri 'Berlin'" in {
     val uriString = "Berlin"
-    Factory.SurfaceForm.fromDBpediaResourceURI(uriString, true).name should be === (new SurfaceForm(uriString)).name.toLowerCase
+    Factory.SurfaceForm.fromDBpediaResourceURI(uriString, true).name should equal((new SurfaceForm(uriString)).name.toLowerCase)
   }
 
   it should "be created for 'DBpediaResource[Berlin]'" in {
     val uriString = "Berlin"
     val uri = new DBpediaResource("Berlin")
-    Factory.SurfaceForm.fromDBpediaResourceURI(uri, false).name should be === (new SurfaceForm(uriString)).name
+    Factory.SurfaceForm.fromDBpediaResourceURI(uri, false).name should equal((new SurfaceForm(uriString)).name)
   }
 
   it should "be created for the full uri of 'DBpediaResource[Berlin]'" in {
     val uriString = "Berlin"
     val uri = new DBpediaResource("Berlin")
-    Factory.SurfaceForm.fromDBpediaResourceURI(uri.uri, false).name should be === (new SurfaceForm(uriString)).name
+    Factory.SurfaceForm.fromDBpediaResourceURI(uri.uri, false).name should equal((new SurfaceForm(uriString)).name)
   }
 
   it should "be created for the url 'http://en.wikipedia.org/resource/Berlin'" in {
     val surfaceFormString = "Berlin"
     val url = "http://en.wikipedia.org/resource/Berlin"
-    Factory.SurfaceForm.fromWikiPageTitle(FactoryTest.extractPageTitleFrom(url), false).name should be === (new SurfaceForm(surfaceFormString)).name
+    Factory.SurfaceForm.fromWikiPageTitle(FactoryTest.extractPageTitleFrom(url), false).name should equal((new SurfaceForm(surfaceFormString)).name)
   }
 
   /* Test Factory.SurfaceFormOccurrence */
@@ -57,7 +56,7 @@ class FactoryTest extends FlatSpec with ShouldMatchers {
     val offset = 1
     val inputDBpediaResourceOcc = new DBpediaResourceOccurrence(new DBpediaResource(uriString), sf, context, offset)
     val expectedSFOcc = new SurfaceFormOccurrence(sf, context, offset)
-    Factory.SurfaceFormOccurrence.from(inputDBpediaResourceOcc).equals(expectedSFOcc) should be === true
+    Factory.SurfaceFormOccurrence.from(inputDBpediaResourceOcc).equals(expectedSFOcc) should equal(true)
   }
 
   /* Test Factory.DBpediaResourceOccurrence */

@@ -4,11 +4,12 @@ lazy val commonSettings = Seq(
   name := "dbpedia-spotlight-model",
   organization := "io.grhodes",
   version := appVersion,
-  scalaVersion := "2.10.5",
+  scalaVersion := "2.12.9",
 
   fork in run := true,
   fork in test := true,
 
+  resolvers += Resolver.bintrayRepo("grahamar", "maven"),
   resolvers += "spring" at "https://repo.spring.io/libs-milestone/",
   resolvers += "opennlp.sf.net" at "http://opennlp.sourceforge.net/maven2/",
   resolvers += "anonsvn" at "http://anonsvn.icefaces.org/repo/maven2/releases/",
@@ -26,11 +27,10 @@ lazy val commonSettings = Seq(
     "org.slf4j" % "slf4j-api" % "1.7.28"
   ),
 
-
   // Test dependencies
   libraryDependencies ++= Seq(
     "junit" % "junit" % "4.8.2" % Test,
-    "org.scalatest" %% "scalatest" % "2.2.5" % Test,
+    "org.scalatest" %% "scalatest" % "3.0.0" % Test,
     "org.mockito" % "mockito-core" % "2.7.22" % Test
   ),
 
@@ -61,7 +61,7 @@ lazy val core = project
       "edu.umd" % "cloud9" % "SNAPSHOT",
       "weka" % "kea-goss-weka" % "5.0-SNAPSHOT",
       "weka" % "weka" % "3.7.3",
-      "net.liftweb" %% "lift-json" % "2.5",
+      "net.liftweb" %% "lift-json" % "3.0.1",
       "net.sf.opencsv" % "opencsv" % "2.0",
       "hsqldb" % "hsqldb" % "1.8.0.1",
       "com.mongodb" % "mongo" % "1.0",
@@ -75,10 +75,10 @@ lazy val core = project
       "trove" % "trove" % "1.1-beta-5",
       "org.apache.mahout" % "mahout-collections" % "1.0",
       "org.apache.commons" % "commons-math" % "2.2",
-      "scala.ahocorasick" % "spotter-aho" % "0.1",
-      "org.scalaz" %% "scalaz-core" % "7.0.5",
-      "org.scalanlp" %% "breeze" % "0.10",
-      "com.typesafe.akka" %% "akka-actor" % "2.3.4",
+      "io.grhodes" %% "scala-aho-corasick" % "0.3",
+      "org.scalaz" %% "scalaz-core" % "7.1.17",
+      "org.scalanlp" %% "breeze" % "0.13",
+      "com.typesafe.akka" %% "akka-actor" % "2.4.12",
       "org.projectlombok" % "lombok" % "1.16.16" % Provided
     )
   )
@@ -126,22 +126,3 @@ lazy val rest = project
       "com.google.code.gson" % "gson" % "2.8.1"
     )
   )
-
-
-
-// Test dependencies
-// libraryDependencies ++= Seq(
-//   "org.mockito" % "mockito-all" % "1.10.19",
-//   "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.2"
-// ).map(_ % Test)
-
-// dockerBaseImage := "adoptopenjdk:11-jre-openj9"
-// dockerRepository := Some("gcr.io")
-// dockerUsername := Some("aylien-production")
-// dockerExposedPorts in Docker := Seq(9000)
-
-// Useful for setting JVM parameters for production
-// bashScriptConfigLocation := Some("${app_home}/../conf/application.production.ini")
-// This is used by logback so log messages are prepended with the app version,
-// I find this very useful for aggregated logging during an update rollout.
-// bashScriptExtraDefines += s"""export APP_VERSION="${version.value}""""
